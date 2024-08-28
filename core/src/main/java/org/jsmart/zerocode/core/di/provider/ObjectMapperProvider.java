@@ -2,7 +2,8 @@ package org.jsmart.zerocode.core.di.provider;
 
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import jakarta.inject.Provider;
+
+import javax.inject.Provider;
 
 public class ObjectMapperProvider implements Provider<ObjectMapper> {
 

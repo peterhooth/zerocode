@@ -8,7 +8,8 @@ import com.fasterxml.jackson.databind.node.JsonNodeType;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import com.jayway.jsonpath.JsonPath;
-import org.apache.commons.text.StringSubstitutor;
+import net.minidev.json.JSONArray;
+import org.apache.commons.lang.text.StrSubstitutor;
 import org.jsmart.zerocode.core.domain.Step;
 import org.jsmart.zerocode.core.engine.assertion.FieldAssertionMatcher;
 import org.jsmart.zerocode.core.engine.assertion.JsonAsserter;
@@ -40,9 +41,11 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+
+import static java.lang.Integer.valueOf;
 import static java.lang.String.format;
-import static org.apache.commons.text.StringEscapeUtils.escapeJava;
-import static org.apache.commons.lang3.StringUtils.substringBetween;
+import static org.apache.commons.lang.StringEscapeUtils.escapeJava;
+import static org.apache.commons.lang.StringUtils.substringBetween;
 import static org.jsmart.zerocode.core.engine.tokens.ZeroCodeAssertionTokens.ASSERT_LOCAL_DATETIME_AFTER;
 import static org.jsmart.zerocode.core.engine.tokens.ZeroCodeAssertionTokens.ASSERT_LOCAL_DATETIME_BEFORE;
 import static org.jsmart.zerocode.core.engine.tokens.ZeroCodeAssertionTokens.ASSERT_PATH_SIZE;
@@ -115,7 +118,7 @@ public class ZeroCodeAssertionsProcessorImpl implements ZeroCodeAssertionsProces
 
         });
 
-        StringSubstitutor sub = new StringSubstitutor(paramMap);
+        StrSubstitutor sub = new StrSubstitutor(paramMap);
 
         return sub.replace(requestJsonOrAnyString);
     }
@@ -130,7 +133,7 @@ public class ZeroCodeAssertionsProcessorImpl implements ZeroCodeAssertionsProces
             try {
 
                 if (thisPath.endsWith(RAW_BODY)) {
-                    /*
+                    /**
                      * In case the rawBody is used anywhere in the steps as $.step_name.response.rawBody,
                      * then it must be escaped as the content was not a simple JSON string to be able
                      * to convert to json. Hence without throwing exception, treat as string content.
@@ -164,7 +167,7 @@ public class ZeroCodeAssertionsProcessorImpl implements ZeroCodeAssertionsProces
             }
         });
 
-        StringSubstitutor sub = new StringSubstitutor(paramMap);
+        StrSubstitutor sub = new StrSubstitutor(paramMap);
 
         return sub.replace(jsonString);
     }
@@ -191,6 +194,7 @@ public class ZeroCodeAssertionsProcessorImpl implements ZeroCodeAssertionsProces
 
             Map<String, Object> createFieldsKeyValuesMap = createAssertionKV(jsonNode, "$.");
 
+            int i = 1;
             for (Map.Entry<String, Object> entry : createFieldsKeyValuesMap.entrySet()) {
                 String path = entry.getKey();
                 Object value = entry.getValue();
@@ -212,7 +216,7 @@ public class ZeroCodeAssertionsProcessorImpl implements ZeroCodeAssertionsProces
                 } else if (path.endsWith(ASSERT_PATH_SIZE)) {
                     path = path.substring(0, path.length() - ASSERT_PATH_SIZE.length());
                     if (value instanceof Number) {
-                        asserter = new ArraySizeAsserterImpl(path, (Integer) value);
+                        asserter = new ArraySizeAsserterImpl(path, ((Integer) value).intValue());
                     } else if (value instanceof String) {
                         asserter = new ArraySizeAsserterImpl(path, (String) value);
                     } else {
@@ -374,10 +378,10 @@ public class ZeroCodeAssertionsProcessorImpl implements ZeroCodeAssertionsProces
 
     /**
      * Resolves JSON.CONTENT as object or array
-     * <p>
+     *
      * First the logic checks if dig-deep needed to avoid unwanted recursions. If not needed, the step definition is
      * returned intact. Otherwise calls the dig deep method to perform the operation.
-     * <p>
+     *
      * returns: The effective step definition
      */
     @Override
@@ -429,7 +433,9 @@ public class ZeroCodeAssertionsProcessorImpl implements ZeroCodeAssertionsProces
             throw new RuntimeException(msg + e);
         }
 
-        properties.keySet().forEach(thisKey -> propertyKeys.add(thisKey.toString()));
+        properties.keySet().stream().forEach(thisKey -> {
+            propertyKeys.add(thisKey.toString());
+        });
     }
 
     private boolean isPropertyKey(String runTimeToken) {
@@ -441,7 +447,7 @@ public class ZeroCodeAssertionsProcessorImpl implements ZeroCodeAssertionsProces
     }
 
     boolean isPathValueJson(Object jsonPathValue) {
-        return jsonPathValue instanceof LinkedHashMap || jsonPathValue instanceof List<?>;
+        return jsonPathValue instanceof LinkedHashMap || jsonPathValue instanceof JSONArray;
     }
 
     void resolveLeafOnlyNodeValue(String scenarioState, Map<String, String> paramMap, String thisPath) {
@@ -457,7 +463,7 @@ public class ZeroCodeAssertionsProcessorImpl implements ZeroCodeAssertionsProces
         if ($VALUE.equals(valueExpr)) {
             return 0;
         }
-        return Integer.parseInt(substringBetween(valueExpr, "[", "]"));
+        return valueOf(substringBetween(valueExpr, "[", "]"));
     }
 
     private String resolveFieldTypes(String resolvedJson) {
@@ -466,8 +472,7 @@ public class ZeroCodeAssertionsProcessorImpl implements ZeroCodeAssertionsProces
                 return resolvedJson;
             }
 
-            Map<String, Object> fieldMap = mapper.readValue(resolvedJson, new TypeReference<Map<String, Object>>() {
-            });
+            Map<String, Object> fieldMap = mapper.readValue(resolvedJson, new TypeReference<Map<String, Object>>() { });
             deepTypeCast(fieldMap);
 
             return mapper.writeValueAsString(fieldMap);
@@ -479,8 +484,8 @@ public class ZeroCodeAssertionsProcessorImpl implements ZeroCodeAssertionsProces
     }
 
     private boolean hasNoTypeCast(String resolvedJson) {
-        long foundCount = fieldTypes.stream().filter(resolvedJson::contains).count();
-        return foundCount <= 0;
+        long foundCount = fieldTypes.stream().filter(thisType -> resolvedJson.contains(thisType)).count();
+        return foundCount <= 0 ? true : false;
     }
 
 

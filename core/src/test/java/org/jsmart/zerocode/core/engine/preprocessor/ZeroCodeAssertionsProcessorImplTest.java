@@ -6,12 +6,16 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
-import com.jayway.jsonpath.Configuration;
 import com.jayway.jsonpath.JsonPath;
+
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.apache.commons.lang.text.StrSubstitutor;
 import org.hamcrest.core.Is;
-import org.jsmart.zerocode.TestUtility;
 import org.jsmart.zerocode.core.di.main.ApplicationMainModule;
-import org.jsmart.zerocode.core.di.provider.JsonPathJacksonProvider;
 import org.jsmart.zerocode.core.di.provider.ObjectMapperProvider;
 import org.jsmart.zerocode.core.domain.ScenarioSpec;
 import org.jsmart.zerocode.core.domain.Step;
@@ -24,11 +28,6 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
-
-import java.io.IOException;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 import static com.jayway.jsonpath.JsonPath.read;
 import static org.hamcrest.CoreMatchers.containsString;
@@ -56,7 +55,6 @@ public class ZeroCodeAssertionsProcessorImplTest {
         injector = Guice.createInjector(new ApplicationMainModule(serverEnvFileName));
         smartUtils = injector.getInstance(SmartUtils.class);
         mapper = new ObjectMapperProvider().get();
-        Configuration.setDefaults(new JsonPathJacksonProvider().get());
         jsonPreProcessor =
                 new ZeroCodeAssertionsProcessorImpl(smartUtils.getMapper(), serverEnvFileName);
     }
@@ -1048,7 +1046,7 @@ public class ZeroCodeAssertionsProcessorImplTest {
                         + "	\"status\": 200,\n"
                         + "	\"body\": {\n"
                         + "	    \"projectDetails\": {\n"
-                        + "	            \"startDateTime\": \"2015-09-14T09:49:34.000Z\"\n"
+                        + "	            \"startDateTime\": \"2015-09-14T09:49:34.000Z\",\n"
                         + "        }\n"
                         + "    }\n"
                         + "}";
@@ -1088,7 +1086,7 @@ public class ZeroCodeAssertionsProcessorImplTest {
                         + "	\"status\": 200,\n"
                         + "	\"body\": {\n"
                         + " 		\"projectDetails\": {\n"
-                        + "			\"startDateTime\": \"2015-09-14T09:49:34.000Z\"\n"
+                        + "			\"startDateTime\": \"2015-09-14T09:49:34.000Z\",\n"
                         + "		}\n"
                         + "	}\n"
                         + "}";
@@ -1478,7 +1476,7 @@ public class ZeroCodeAssertionsProcessorImplTest {
     public void test_JSONCONTENT_leafNode() throws IOException {
         ScenarioExecutionState scenarioExecutionState = new ScenarioExecutionState();
 
-        final StepExecutionState step1 =  createStepWithRequestAndResponse("create_emp", "\"body\" : {\n    \"id\" : 39001,\n    \"ldapId\" : \"emmanorton\"\n  }\n}\n  }");
+        final String step1 =  createStepWithRequestAndResponse("create_emp", "\"body\" : {\n    \"id\" : 39001,\n    \"ldapId\" : \"emmanorton\"\n  }\n}\n  }");
         scenarioExecutionState.addStepState(step1);
 
         ScenarioSpec scenarioSpec =
@@ -1500,7 +1498,7 @@ public class ZeroCodeAssertionsProcessorImplTest {
     public void test_JSONCONTENT_stringArray() throws IOException {
         ScenarioExecutionState scenarioExecutionState = new ScenarioExecutionState();
 
-        final StepExecutionState step1 =  createStepWithRequestAndResponse("create_emp", "\"body\": {\"id\": 38001,\n     \"names\": [\"test1\", \"test2\"]\n}");
+        final String step1 =  createStepWithRequestAndResponse("create_emp", "\"body\": {\"id\": 38001,\n     \"names\": [\"test1\", \"test2\"]\n}");
         scenarioExecutionState.addStepState(step1);
 
         ScenarioSpec scenarioSpec =
@@ -1516,9 +1514,10 @@ public class ZeroCodeAssertionsProcessorImplTest {
 
         String result = "[\"test1\",\"test2\"]";
 
-        Object jsonPathValue = JsonPath.parse(jsonResult).read("$.request.body.names");
+        Object jsonPathValue = JsonPath.read(jsonResult,
+            "$.request.body.names");
 
-        Assert.assertEquals(result, this.mapper.writeValueAsString(jsonPathValue));
+        Assert.assertEquals(result, jsonPathValue.toString());
     }
 
     @Test
@@ -1540,7 +1539,7 @@ public class ZeroCodeAssertionsProcessorImplTest {
          *     ]
          * }
          */
-        final StepExecutionState step1 =  createStepWithRequestAndResponse("create_emp",
+        final String step1 =  createStepWithRequestAndResponse("create_emp",
                 "\"body\": {\"id\": 38001, \"allAddresses\": [{\"type\": \"Home\", \"line1\": \"North Lon\", \"id\": 47}, {\"type\": \"Office\", \"line1\": \"Central Lon\"}]}");
         scenarioExecutionState.addStepState(step1);
 
@@ -1567,7 +1566,7 @@ public class ZeroCodeAssertionsProcessorImplTest {
     public void test_JSONCONTENT_jsonBlock() throws IOException {
         ScenarioExecutionState scenarioExecutionState = new ScenarioExecutionState();
 
-        final StepExecutionState step1 =  createStepWithRequestAndResponse("create_emp",
+        final String step1 =  createStepWithRequestAndResponse("create_emp",
                 "\"body\": {\n" +
                         "    \"id\": 38001,\n" +
                         "    \"address\": {\n" +
@@ -1618,17 +1617,21 @@ public class ZeroCodeAssertionsProcessorImplTest {
     }
 
 
-    protected StepExecutionState createStepWithRequestAndResponse(String stepName, String body) {
-        StepExecutionState stepExecutionState = new StepExecutionState();
-        stepExecutionState.addStep(TestUtility.createDummyStep(stepName));
-        stepExecutionState.addRequest("{\n" +
-                "    \"customer\": {\n" +
-                "        \"firstName\": \"FIRST_NAME\"\n" +
-                "    }\n" +
-                "}");
-        stepExecutionState.addResponse("{\n" +
-                body +
-                "}");
-        return stepExecutionState;
+    protected String createStepWithRequestAndResponse(String stepName, String body) {
+        Map<String, String> parammap = new HashMap<>();
+
+        parammap.put("STEP.NAME", stepName);
+        parammap.put("STEP.REQUEST", "{\n" +
+            "    \"customer\": {\n" +
+            "        \"firstName\": \"FIRST_NAME\"\n" +
+            "    }\n" +
+            "}");
+        parammap.put("STEP.RESPONSE", "{\n" +
+            body +
+            "}");
+
+        StrSubstitutor sub = new StrSubstitutor(parammap);
+
+        return sub.replace((new StepExecutionState()).getRequestResponseState());
     }
 }

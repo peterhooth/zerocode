@@ -1,8 +1,7 @@
 package org.jsmart.zerocode.core.domain.builders;
 
 import com.aventstack.extentreports.ExtentReports;
-import com.aventstack.extentreports.reporter.ExtentSparkReporter;
-
+import com.aventstack.extentreports.reporter.ExtentHtmlReporter;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
@@ -15,14 +14,14 @@ import static org.slf4j.LoggerFactory.getLogger;
 public class ExtentReportsFactory {
     private static final org.slf4j.Logger LOGGER = getLogger(ExtentReportsFactory.class);
 
-    private static ExtentSparkReporter extentSparkReporter;
+    private static ExtentHtmlReporter extentHtmlReporter;
 
     private static ExtentReports extentReports;
 
     private static Map<Object, String> systemProperties = new HashMap<>();
 
     public static ExtentReports createReportTheme(String reportFileName) {
-        ExtentSparkReporter extentHtmlReporter = createExtentHtmlReporter(reportFileName);
+        ExtentHtmlReporter extentHtmlReporter = createExtentHtmlReporter(reportFileName);
 
         extentReports = new ExtentReports();
 
@@ -53,14 +52,14 @@ public class ExtentReportsFactory {
         extentReports.setSystemInfo("Java Vendor : ", javaVendor);
     }
 
-    public static ExtentSparkReporter createExtentHtmlReporter(String reportFileName) {
-        extentSparkReporter = new ExtentSparkReporter(reportFileName);
+    public static ExtentHtmlReporter createExtentHtmlReporter(String reportFileName) {
+        extentHtmlReporter = new ExtentHtmlReporter(reportFileName);
 
 
-        extentSparkReporter.config().setDocumentTitle(REPORT_TITLE_DEFAULT);
-        extentSparkReporter.config().setReportName(REPORT_DISPLAY_NAME_DEFAULT);
+        extentHtmlReporter.config().setDocumentTitle(REPORT_TITLE_DEFAULT);
+        extentHtmlReporter.config().setReportName(REPORT_DISPLAY_NAME_DEFAULT);
 
-        return extentSparkReporter;
+        return extentHtmlReporter;
     }
 
 
@@ -89,11 +88,11 @@ public class ExtentReportsFactory {
     }
 
     public static void reportName(String reportName) {
-        extentSparkReporter.config().setReportName(reportName);
+        extentHtmlReporter.config().setReportName(reportName);
     }
 
     public static String getReportName() {
-        return extentSparkReporter.config().getReportName();
+        return extentHtmlReporter.config().getReportName();
     }
 
 }

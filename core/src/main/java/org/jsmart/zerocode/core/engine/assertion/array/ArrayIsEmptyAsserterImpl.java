@@ -1,10 +1,9 @@
 
 package org.jsmart.zerocode.core.engine.assertion.array;
 
+import net.minidev.json.JSONArray;
 import org.jsmart.zerocode.core.engine.assertion.FieldAssertionMatcher;
 import org.jsmart.zerocode.core.engine.assertion.JsonAsserter;
-
-import java.util.List;
 
 import static org.jsmart.zerocode.core.engine.assertion.FieldAssertionMatcher.aMatchingMessage;
 import static org.jsmart.zerocode.core.engine.assertion.FieldAssertionMatcher.aNotMatchingMessage;
@@ -28,14 +27,21 @@ public class ArrayIsEmptyAsserterImpl implements JsonAsserter {
 
     @Override
     public FieldAssertionMatcher actualEqualsToExpected(Object result) {
-        if (result instanceof List<?>) {
-            List<?> list = (List<?>) result;
+        if(result instanceof JSONArray){
 
-            if (list.isEmpty()) {
+            final JSONArray actualArrayValue = (JSONArray) result;
+
+            if(actualArrayValue.isEmpty()){
+
                 return aMatchingMessage();
             }
 
+            return aNotMatchingMessage(path, "[]", result);
+
+        } else {
+
+            return aNotMatchingMessage(path, "[]", result);
+
         }
-        return aNotMatchingMessage(path, "[]", result);
     }
 }

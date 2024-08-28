@@ -10,9 +10,9 @@
     </appender>
 
     <appender name="consoleAppender" class="ch.qos.logback.core.ConsoleAppender">
-        <encoder>
+        <layout class="ch.qos.logback.classic.PatternLayout">
             <pattern>%d [%thread] %-5level %logger{30} - %msg%n</pattern>
-        </encoder>
+        </layout>
     </appender>
 
     <!-- Update level to DEBUG or INFO to get more detailed operations -->

@@ -1,13 +1,11 @@
 package org.jsmart.zerocode.core.engine.preprocessor;
 
-import org.apache.commons.text.StringSubstitutor;
+import org.apache.commons.lang.text.StrSubstitutor;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 public class ScenarioExecutionState {
@@ -15,8 +13,8 @@ public class ScenarioExecutionState {
             "  ${STEP_REQUEST_RESPONSE_SECTION}\n" +
             "}";
 
-
-    Map<String, StepExecutionState> allStepsLinkedMap = new LinkedHashMap<>();
+    List<StepExecutionState> allSteps = new ArrayList<>();
+    List<String> allStepsInStringList = new ArrayList<>();
 
     Map<String, String> paramMap = new HashMap<>();
 
@@ -32,30 +30,32 @@ public class ScenarioExecutionState {
         this.scenarioStateTemplate = scenarioStateTemplate;
     }
 
-    public Optional<StepExecutionState> getExecutedStepState(String stepName) {
-        return Optional.of(allStepsLinkedMap.get(stepName));
+    public List<StepExecutionState> getAllSteps() {
+        return allSteps;
     }
 
-    public List<StepExecutionState> getAllSteps() {
-        return new ArrayList<>(allStepsLinkedMap.values());
+    public void setAllSteps(List<StepExecutionState> allSteps) {
+        this.allSteps = allSteps;
     }
 
     public List<String> getAllStepsInStringList() {
-        return allStepsLinkedMap.values()
-                .stream().map(StepExecutionState::getResolvedStep)
-                .collect(Collectors.toList());
+        return allStepsInStringList;
     }
 
-    public void addStepState(StepExecutionState stepState){
-        //removing key so that order of step state is changed
-        allStepsLinkedMap.remove(stepState.getStepName());
-        allStepsLinkedMap.put(stepState.getStepName(), stepState);
+    public void setAllStepsInStringList(List<String> allStepsInStringList) {
+        this.allStepsInStringList = allStepsInStringList;
+    }
+
+    public void addStepState(String stepState){
+        allStepsInStringList.add(stepState);
     }
 
     public String getResolvedScenarioState() {
-        final String commaSeparatedStepResults = String.join(", ", getAllStepsInStringList());
+        final String commaSeparatedStepResults = getAllStepsInStringList().stream()
+                .map(i -> i)
+                .collect(Collectors.joining(", "));
         paramMap.put("STEP_REQUEST_RESPONSE_SECTION", commaSeparatedStepResults);
 
-        return (new StringSubstitutor(paramMap)).replace(scenarioStateTemplate);
+        return (new StrSubstitutor(paramMap)).replace(scenarioStateTemplate);
     }
 }

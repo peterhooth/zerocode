@@ -5,7 +5,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectReader;
-import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang.StringUtils;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -27,7 +27,7 @@ public class Parameterized {
             @JsonProperty("ignoreHeader") Boolean ignoreHeader) {
         this.valueSource = valueSource;
         this.ignoreHeader = Optional.ofNullable(ignoreHeader).orElse(false);
-        this.csvSource = Optional.ofNullable(csvSourceJsonNode).map(this::getCsvSourceFrom).orElse(Collections.emptyList());
+        this.csvSource = getCsvSourceFrom(csvSourceJsonNode);
     }
 
     public List<Object> getValueSource() {

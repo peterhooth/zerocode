@@ -3,8 +3,9 @@ package org.jsmart.zerocode.core.di.module;
 import com.google.gson.Gson;
 import com.google.inject.Binder;
 import com.google.inject.Module;
-import jakarta.inject.Singleton;
 import org.jsmart.zerocode.core.di.provider.GsonSerDeProvider;
+
+import javax.inject.Singleton;
 
 
 public class GsonModule implements Module {

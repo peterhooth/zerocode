@@ -3,10 +3,13 @@ package org.jsmart.zerocode.core.engine.validators;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
-import com.jayway.jsonpath.Configuration;
-import org.jsmart.zerocode.TestUtility;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.apache.commons.lang.text.StrSubstitutor;
 import org.jsmart.zerocode.core.di.main.ApplicationMainModule;
-import org.jsmart.zerocode.core.di.provider.JsonPathJacksonProvider;
 import org.jsmart.zerocode.core.di.provider.ObjectMapperProvider;
 import org.jsmart.zerocode.core.domain.ScenarioSpec;
 import org.jsmart.zerocode.core.domain.Step;
@@ -17,8 +20,6 @@ import org.jsmart.zerocode.core.engine.preprocessor.ZeroCodeAssertionsProcessorI
 import org.jsmart.zerocode.core.utils.SmartUtils;
 import org.junit.Before;
 import org.junit.Test;
-
-import java.util.List;
 
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.core.Is.is;
@@ -39,9 +40,6 @@ public class ZeroCodeValidatorImplTest {
         injector = Guice.createInjector(new ApplicationMainModule(serverEnvFileName));
         smartUtils = injector.getInstance(SmartUtils.class);
         mapper = new ObjectMapperProvider().get();
-        Configuration.setDefaults(new JsonPathJacksonProvider().get());
-
-
         jsonPreProcessor =
                 new ZeroCodeAssertionsProcessorImpl(smartUtils.getMapper(), serverEnvFileName);
 
@@ -95,20 +93,22 @@ public class ZeroCodeValidatorImplTest {
 
     }
 
-    private StepExecutionState createResolvedScenarioState() {
-        StepExecutionState stepExecutionState = new StepExecutionState();
-        stepExecutionState.addStep(TestUtility.createDummyStep("produce_step"));
-        stepExecutionState.addRequest("{\n" +
-                "\"recordType\":\"JSON\"," +
-                "\"records\":[{\"key\":null,\"headers\":{\"CORRELATION_ID\":\"test\"},\"value\":{\"test\":\"1\"}}]\n" +
+    private String createResolvedScenarioState() {
+        Map<String, String> parammap = new HashMap<>();
+
+        parammap.put("STEP.NAME", "produce_step");
+        parammap.put("STEP.REQUEST", "{\n" +
+                        "\"recordType\":\"JSON\"," +
+                        "\"records\":[{\"key\":null,\"headers\":{\"CORRELATION_ID\":\"test\"},\"value\":{\"test\":\"1\"}}]\n" +
                 "}");
-        stepExecutionState.addResponse("{\n" +
+        parammap.put("STEP.RESPONSE", "{\n" +
                 "    \"id\" : 10101\n" +
                 "}");
 
-        return stepExecutionState;
-    }
+        StrSubstitutor sub = new StrSubstitutor(parammap);
 
+        return sub.replace((new StepExecutionState()).getRequestResponseState());
+    }
     @Test
     public void test_validateFlat_nonMatching() throws Exception {
 

@@ -5,11 +5,10 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.JsonNode;
-
 import java.util.List;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
-/*
+/**
  * Do not enable this @JsonIgnoreProperties(ignoreUnknown = true) as this will suppress the test data failure,
  * let it spit out the exception(s) in case of a bad json/test input
  */
@@ -159,7 +158,7 @@ public class Step {
         this.request = request;
         this.url = url;
         this.sort = sort;
-        this.assertions = assertions == null || assertions.isNull() ? verify : assertions;
+        this.assertions = assertions.isNull() ? verify : assertions;
         this.verify = verify;
         this.ignoreStep = ignoreStep;
     }

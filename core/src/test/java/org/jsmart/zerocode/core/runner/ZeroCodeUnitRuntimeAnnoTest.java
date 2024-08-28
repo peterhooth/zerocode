@@ -54,7 +54,7 @@ public class ZeroCodeUnitRuntimeAnnoTest {
 
     public static void alterAnnotation(Class<?> targetClass, Class<? extends Annotation> targetAnnotation, Annotation targetValue) {
         try {
-            Method method = Class.class.getDeclaredMethod(ANNOTATION_METHOD, (Class<?>[]) null);
+            Method method = Class.class.getDeclaredMethod(ANNOTATION_METHOD, null);
             method.setAccessible(true);
 
             Object annotationData = method.invoke(targetClass);

@@ -3,7 +3,7 @@ package org.jsmart.zerocode.core.utils;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang.StringUtils;
 import org.jsmart.zerocode.core.domain.EnvProperty;
 import org.jsmart.zerocode.core.domain.Parameterized;
 import org.jsmart.zerocode.core.domain.Step;
@@ -118,6 +118,18 @@ public class RunnerUtils {
         }
 
         return stepLoopTimes > 0 ? stepLoopTimes: MIN_COUNT;
+    }
+
+    public static int getParameterSize(Parameterized parameterized) {
+        if (parameterized == null) {
+            return 0;
+        }
+
+        List<Object> valueSource = parameterized.getValueSource();
+        List<String> csvSource = parameterized.getCsvSource();
+
+        return valueSource != null ? valueSource.size() :
+                (csvSource != null ? csvSource.size() : 0);
     }
 
     public static void handleTestCompleted(RunListener reportListener, Logger logger) {
